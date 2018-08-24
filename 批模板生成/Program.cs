@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNet4.Utilities.UtilReg;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -7,6 +8,7 @@ namespace 批模板生成
 {
 	static class Program
 	{
+		public static Reg RegMain = new Reg().In("Main");
 		/// <summary>
 		/// 应用程序的主入口点。
 		/// </summary>
@@ -15,7 +17,7 @@ namespace 批模板生成
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Form1());
+			Application.Run(new FrmMain());
 		}
 	}
 }
