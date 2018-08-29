@@ -104,7 +104,7 @@ namespace DotNet4.Utilities.UtilDrawing
 				return;
 			} ;
 			
-			var codecInfo = codecInfos[f.FilterIndex-1];
+			var codecInfo = codecInfos[codecInfos.Length- f.FilterIndex];
 
 			new Thread(()=> {
 				var rowCount = sh.UsedRange.Rows.Count;
@@ -132,6 +132,7 @@ namespace DotNet4.Utilities.UtilDrawing
 						var fileName =string.Format("{0}{1}{2}",fileDic ,fileFormat, sh.Cells[i, 1].Value);
 						foreach (var ctl in list)
 						{
+							if (ctl.BindingFiled == null) continue;
 							bool contains = false;
 							contains = dic.ContainsKey(ctl.BindingFiled);
 							var thisValue = contains ? ((Microsoft.Office.Interop.Excel.Range)sh.Cells[i, dic[ctl.BindingFiled]]).Value : "";
@@ -198,8 +199,29 @@ namespace DotNet4.Utilities.UtilDrawing
 		}
 		public int X { get => Setting.X; set =>Setting.X=value; }
 		public int Y { get => Setting.Y; set => Setting.Y = value; }
-		public int W { get => Setting.W; set => Setting.W = value; }
-		public int H { get => Setting.H; set => Setting.H=value; }
+		public int W { get => Setting.W==0?1:Setting.W; set => Setting.W = value; }
+		public int H { get => Setting.H==0?1:Setting.H; set => Setting.H=value; }
+		/// <summary>
+		/// 预移动
+		/// </summary>
+		public void MoveTemp(int x,int y,int w,int h)
+		{
+			X = PrX + x;
+			Y = PrY + y;
+			W = PrW + w;
+			H = PrH + h;
+		}
+
+		/// <summary>
+		/// 应用移动
+		/// </summary>
+		public void MoveConfirm()
+		{
+			PrX = X;
+			PrY = Y;
+			PrW = W;
+			PrH = H;
+		}
 		public Color ForeColor { get => Setting.ForeColor;set{
 				foreBrush = new SolidBrush(value);
 				Setting.ForeColor = value;
@@ -251,7 +273,7 @@ namespace DotNet4.Utilities.UtilDrawing
 			} }
 		public bool AutoNewLine { get => autoNewLine; set => autoNewLine = value; }
 		public bool Selected { get => selected; set => selected = value; }
-		public int PrX, PrY;
+		public int PrX, PrY,PrW,PrH;
 
 		private List<string> autoNewLineInfo;
 		private bool autoNewLine;
@@ -393,10 +415,13 @@ namespace DotNet4.Utilities.UtilDrawing
 		{
 			return x > X && y > Y && x < X + W && y < Y + H;
 		}
-		internal bool HoverContain(int x, int y)
+		internal short HoverContain(int x, int y)
 		{
-			
-			return false;
+			if (Math.Pow(x - X - dis, 2) + Math.Pow(y - Y+dis, 2) <= Math.Pow(size, 2)) return 1;
+			if (Math.Pow(x - (X+W+dis), 2) + Math.Pow(y - Y+dis, 2) <= Math.Pow(size, 2)) return 2;
+			if (Math.Pow(x - X - dis, 2) + Math.Pow(y - (Y+H+dis), 2) <= Math.Pow(size, 2)) return 3;
+			if (Math.Pow(x - (X + W + dis), 2) + Math.Pow(y - (Y+H+dis), 2) <= Math.Pow(size, 2)) return 4;
+			return 0;
 		}
 		public static int dis = 5, size = 10;
 	}

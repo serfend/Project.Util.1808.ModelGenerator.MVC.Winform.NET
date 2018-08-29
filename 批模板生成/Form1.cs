@@ -104,29 +104,55 @@ namespace 批模板生成
 			{
 				var deltaX = mouseDownX - e.X;
 				var deltaY = mouseDownY - e.Y;
-				bool lockDirection = Control.ModifierKeys == Keys.Shift;
-				bool useDirectionX = Math.Abs(deltaX) > Math.Abs(deltaY);
-				foreach (var element in selectedCtl)
-				{
-					if (lockDirection)
+				if (onResizeIndex>0) {
+					foreach(var element in selectedCtl)
 					{
-						if(useDirectionX)
+						switch (onResizeIndex)
 						{
-							element.X = element.PrX - deltaX;
-							element.Y = element.PrY;
+							case 1: {
+									//左上
+									element.MoveTemp(-deltaX,-deltaY,deltaX,deltaY);
+									break;
+								}
+							case 2:
+								{
+									//右上
+									element.MoveTemp(0, -deltaY, -deltaX, deltaY);
+									break;
+								}
+							case 3:
+								{
+									//左下
+									element.MoveTemp(-deltaX, 0, deltaX, -deltaY);
+									break;
+								}
+							case 4:
+								{
+									//右下
+									element.MoveTemp(0, 0, -deltaX, -deltaY);
+									break;
+								}
+						}
+					}
+				}
+				else
+				{
+					
+					bool lockDirection = Control.ModifierKeys == Keys.Shift;
+					bool useDirectionX = Math.Abs(deltaX) > Math.Abs(deltaY);
+					foreach (var element in selectedCtl)
+					{
+						if (lockDirection)
+						{
+							if (useDirectionX) element.MoveTemp(-deltaX, 0, 0, 0);
+							else element.MoveTemp(0, -deltaY, 0, 0);
 						}
 						else
 						{
-							element.Y = element.PrY - deltaY;
-							element.X = element.PrX;
+							element.MoveTemp(-deltaX, -deltaY, 0, 0);
 						}
-					}
-					else
-					{
-						element.X = element.PrX - deltaX;
-						element.Y = element.PrY - deltaY;
-					}
 
+					}
 				}
 				canvasNeedRefresh = true;
 			}
@@ -136,10 +162,10 @@ namespace 批模板生成
 		{
 			foreach(var element in selectedCtl)
 			{
-				element.PrX = element.X;
-				element.PrY = element.Y;
+				element.MoveConfirm();
 			}
 			canvasNeedRefresh = true;
+			onResizeIndex = 0;
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -150,7 +176,8 @@ namespace 批模板生成
 				canvas.Cancel = true;
 			}
 		}
-		private bool anyCtlIsSelect=false;
+		private bool anyCtlIsSelect = false;
+		private short onResizeIndex=0;
 		private void CanvasMain_MouseDown(object sender, MouseEventArgs e)
 		{
 			mouseDownX = e.X;
@@ -159,6 +186,17 @@ namespace 批模板生成
 			bool cleared=false;
 			if (!mutilSelect)
 			{
+				foreach (var element in canvas.List)
+				{
+					onResizeIndex = element.HoverContain(e.X, e.Y);
+					if (onResizeIndex > 0)
+					{
+						//调整大小开始
+						return;
+					}
+				}
+
+				//取消选择
 				cleared = true;
 				selectedCtl.Clear();
 				foreach (var element in canvas.List)
@@ -281,7 +319,10 @@ namespace 批模板生成
 				list.Clear();
 				canvas.List.Clear();
 				var l = SettingModel.Load(f.FileName,out string bg,out int w,out int h);//TODO 输入文件
-				if(bg.Length>0)BgImage = Image.FromFile(bg);
+				if (bg.Length > 0) {
+					BgImage = Image.FromFile(bg);
+					SettingModel.OnBackImgModefy(bgImage);
+				}
 				canvas.OnSizeModefy(w, h);
 				if (l == null) return;
 				foreach (var i in l)
@@ -292,8 +333,7 @@ namespace 批模板生成
 							if (ctl != null&&!ctl.Selected)
 							{
 								selectedCtl.Add(ctl);
-								ctl.PrX = ctl.X;
-								ctl.PrY = ctl.Y;
+								ctl.MoveConfirm();
 								ctl.Selected = true;
 							}
 						}
@@ -504,7 +544,8 @@ namespace 批模板生成
 					W = item.Setting.W,
 					X = item.Setting.X,
 					Y = item.Setting.Y,
-					TargetCol=item.Setting.TargetCol
+					TargetCol=item.Setting.TargetCol,
+					TextAlign=item.Setting.TextAlign
 				};
 				var c = new Element(l)
 				{
@@ -515,9 +556,8 @@ namespace 批模板生成
 							ctl.Selected = true;
 						}
 					},
-					PrX=l.X,
-					PrY=l.Y
 				};
+				c.MoveConfirm();
 				canvas.List.Add(c);
 				l.OnSettingModify = (setting) => {
 					c.RefreshAnySetting();
@@ -537,6 +577,47 @@ namespace 批模板生成
 				InfoShower.ShowOnce(info);
 			}
 			canvasNeedRefresh = true;
+		}
+
+		private void 清除无效框ToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var waitToClear = new List<Element>();
+			foreach(var element in canvas.List)
+			{
+				if (element.BindingFiled == null || element.BindingFiled.Length == 0)
+				{
+					waitToClear.Add(element);
+				}
+			}
+			
+			if (waitToClear.Count > 0)
+			{
+				var f = new InfoShower()
+				{
+					Title = "确认清除?",
+					Info = string.Format("共计{0}个信息框可清除,点击此处确认。", waitToClear.Count),
+					ExistTime = 10000,
+					TitleColor = Color.Yellow,
+					CallBack = () => {
+						foreach (var element in waitToClear)
+						{
+							canvas.List.Remove(element);
+						}
+						var f2 = new InfoShower()
+						{
+							Title = "清除完成",
+							TitleColor = Color.LawnGreen
+						};
+						InfoShower.ShowOnce(f2);
+					}
+				};
+				InfoShower.ShowOnce(f);
+			}
+			else
+			{
+				var f = new InfoShower() { Title="暂无需要清除的信息框",Info="只有未绑定字段的信息框会被清除"};
+				InfoShower.ShowOnce(f);
+			}
 		}
 
 		private void 尺寸ToolStripMenuItem_Click(object sender, EventArgs e)
