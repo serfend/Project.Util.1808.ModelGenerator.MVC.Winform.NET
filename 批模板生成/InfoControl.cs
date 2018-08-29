@@ -36,14 +36,24 @@ namespace 批模板生成
 			};
 			RefreshLayout();
 		}
-
+		private bool selected;
+		public Action<InfoControl,bool> OnControlSelected;
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
 			base.OnMouseDown(e);
-			if (e.Button==MouseButtons.Right)
+			if (e.Button==MouseButtons.Left)
 			{
-				NativeMethods.ReleaseCapture();
-				NativeMethods.SendMessage(this.Handle,(uint)0xA1, new IntPtr(2), IntPtr.Zero);
+				if (!Selected)
+				{
+					Selected = true;
+					OnControlSelected?.Invoke(this,false);
+				}
+				else
+				{
+					NativeMethods.ReleaseCapture();
+					NativeMethods.SendMessage(this.Handle, (uint)0xA1, new IntPtr(2), IntPtr.Zero);
+				}
+				
 			}
 		}
 		protected override void OnMouseUp(MouseEventArgs e)
@@ -108,6 +118,9 @@ namespace 批模板生成
 		}
 		private SolidBrush foreBrush = new SolidBrush(Color.Black);
 		private List<string> autoNewLineInfo;
+
+		public bool Selected { get => selected; set => selected = value; }
+
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			e.Graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;

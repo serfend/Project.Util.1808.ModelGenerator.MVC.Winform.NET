@@ -18,11 +18,183 @@ namespace 批模板生成
 		private InfoSettingList list=new InfoSettingList();
 		private Canvas canvas;
 		private Image bgImage;
+		private CanvasMain CanvasMain=new CanvasMain() ;
 		public FrmMain()
 		{
 			InitializeComponent();
-			canvas = new Canvas();
+			var setting = Program.RegMain.In("Setting").In("Default").In("Canvas");
+			canvas = new Canvas() {
+				OnSizeModefy = (w, h) => {
+					canvas.ScaleWidth = w;
+					canvas.ScaleHeight = h;
+					CanvasMain.Width = w;
+					CanvasMain.Height = h;
+					setting.SetInfo("ScaleWidth", w.ToString());
+					setting.SetInfo("ScaleHeight", h.ToString());
+				}
+				
+			};
+			CanvasMain.canvas = canvas;
+			canvas.ScaleWidth = Convert.ToInt32(setting.GetInfo("ScaleWidth", "1000"));
+			canvas.ScaleHeight = Convert.ToInt32(setting.GetInfo("ScaleHeight", "1000"));
+			canvas.OnSizeModefy(canvas.ScaleWidth, canvas.ScaleHeight);
+			CanvasMain.Paint += CanvasMain_Paint;
+			CanvasMain.MouseDown += CanvasMain_MouseDown;
+			CanvasMain.MouseUp += CanvasMain_MouseUp;
+			CanvasMain.MouseMove += CanvasMain_MouseMove;
+			CanvasMain.MouseDoubleClick += CanvasMain_MouseDoubleClick;
+			CanvasMain.MouseWheel += (x, xx) =>
+			{
+				//if (Control.ModifierKeys == Keys.Control)
+				//{
+				//	if (xx.Delta > 0)
+				//	{
+				//		canvas.ScalePercent *=1.1;
+				//		canvas.ScalePercent += 0.01;
+				//	}
+				//	else
+				//	{
+				//		canvas.ScalePercent *= 0.9;
+				//	}
+					
+				//	CanvasMain.Width = canvas.ScaleWidth ;
+				//	CanvasMain.Height = canvas.ScaleHeight;
+				//	var f = new InfoShower() {
+				//		Title = "修改" + canvas.ScalePercent
+				//	};
+				//	InfoShower.ShowOnce(f);
+				//}
+			};
+			CanvasMain.Parent = this;
+			canvasRefresh = new BackgroundWorker() ;
+			canvasRefresh.DoWork += CanvasRefresh_DoWork;
+			canvasRefresh.RunWorkerAsync();
 		}
+
+		private void CanvasMain_MouseDoubleClick(object sender, MouseEventArgs e)
+		{
+			foreach (var element in canvas.List)
+			{
+				if (element.Contain(e.X, e.Y))
+				{
+					element.Setting.SettingModify(true);
+					break;
+				}
+			}
+		}
+		private bool canvasNeedRefresh=false;
+		private void CanvasRefresh_DoWork(object sender, DoWorkEventArgs e)
+		{
+			while (true)
+			{
+				if (canvasNeedRefresh)
+				{
+					CanvasMain.Invalidate();
+					canvasNeedRefresh = false;
+				}
+				Thread.Sleep(50);
+			}
+		}
+
+		private BackgroundWorker canvasRefresh;
+		private int mouseDownX, mouseDownY;
+		private void CanvasMain_MouseMove(object sender, MouseEventArgs e)
+		{
+			if(e.Button == MouseButtons.Left)
+			{
+				var deltaX = mouseDownX - e.X;
+				var deltaY = mouseDownY - e.Y;
+				bool lockDirection = Control.ModifierKeys == Keys.Shift;
+				bool useDirectionX = Math.Abs(deltaX) > Math.Abs(deltaY);
+				foreach (var element in selectedCtl)
+				{
+					if (lockDirection)
+					{
+						if(useDirectionX)
+						{
+							element.X = element.PrX - deltaX;
+							element.Y = element.PrY;
+						}
+						else
+						{
+							element.Y = element.PrY - deltaY;
+							element.X = element.PrX;
+						}
+					}
+					else
+					{
+						element.X = element.PrX - deltaX;
+						element.Y = element.PrY - deltaY;
+					}
+
+				}
+				canvasNeedRefresh = true;
+			}
+		}
+
+		private void CanvasMain_MouseUp(object sender, MouseEventArgs e)
+		{
+			foreach(var element in selectedCtl)
+			{
+				element.PrX = element.X;
+				element.PrY = element.Y;
+			}
+			canvasNeedRefresh = true;
+		}
+
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			base.OnKeyDown(e);
+			if (e.KeyCode == Keys.Escape)
+			{
+				canvas.Cancel = true;
+			}
+		}
+		private bool anyCtlIsSelect=false;
+		private void CanvasMain_MouseDown(object sender, MouseEventArgs e)
+		{
+			mouseDownX = e.X;
+			mouseDownY = e.Y;
+			bool mutilSelect = Control.ModifierKeys == Keys.Control || Control.ModifierKeys == Keys.Shift;
+			bool cleared=false;
+			if (!mutilSelect)
+			{
+				cleared = true;
+				selectedCtl.Clear();
+				foreach (var element in canvas.List)
+				{
+					element.Selected = false;
+				}
+			}
+			anyCtlIsSelect = false;
+			foreach (var element in canvas.List)
+			{
+				if (element.Contain(e.X,e.Y))
+				{
+					element.OnCtlSelected.Invoke(element, mutilSelect);
+					anyCtlIsSelect = true;
+					break;
+				}
+			}
+			if (!anyCtlIsSelect && !cleared)
+			{
+				selectedCtl.Clear();
+				foreach (var element in canvas.List)
+				{
+					element.Selected = false;
+				}
+			}
+			canvasNeedRefresh = true;
+		}
+		
+
+
+		private const string defaultText = "暂无底图,右键呼出菜单~";
+		private void CanvasMain_Paint(object sender, PaintEventArgs e)
+		{
+		}
+
+
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			base.OnFormClosing(e);
@@ -58,25 +230,7 @@ namespace 批模板生成
 				Xls数据ToolStripMenuItem_Click(this,EventArgs.Empty);
 				return false;
 			}
-			canvas.List.Clear();
-			foreach(var element in Controls)
-			{
-				if(element is InfoControl ele)
-				{
-					canvas.List.Add(new Element()
-					{
-						AutoNewLine= ele.setting.AutoNewLine,
-						X= ele.setting.X,
-						Y= ele.setting.Y,
-						W= ele.setting.W,
-						H= ele.setting.H,
-						ForeColor= ele.setting.ForeColor,
-						BindingFiled= ele.setting.TargetCol,
-						Font= new Font(ele.setting.FontName, ele.setting.FontSize),
-					});
-					
-				}
-			}
+			
 			canvas.OutPut(sh,()=> {
 				this.BeginInvoke((EventHandler)delegate {
 					var info = new InfoShower()
@@ -111,44 +265,59 @@ namespace 批模板生成
 			{
 				this.BgImage = Image.FromFile(t.FileName);
 				SettingModel.BackGroundImg = t.FileName;
+				canvasNeedRefresh = true;
 			}
 		}
+		private List<Element> selectedCtl=new List<Element>();
 		private void 读取ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			var f = new OpenFileDialog()
 			{
 				Title = "读取布局",
-				Filter = "卡片模板|*.cm;*.cmx;*.cmm"
+				Filter = "卡片模板|*.cm;*.cmx;*.cmm|所有文件|*.*"
 			};
 			if (f.ShowDialog() == DialogResult.OK)
 			{
 				list.Clear();
-				var l = SettingModel.Load(f.FileName);
+				canvas.List.Clear();
+				var l = SettingModel.Load(f.FileName,out string bg,out int w,out int h);//TODO 输入文件
+				if(bg.Length>0)BgImage = Image.FromFile(bg);
+				canvas.OnSizeModefy(w, h);
+				if (l == null) return;
 				foreach (var i in l)
 				{
-					var c = new InfoControl(i)
+					var c = new Element(i)
 					{
-						Parent = this,
-						
+						OnCtlSelected = (ctl,mutiSelect) => {
+							if (ctl != null&&!ctl.Selected)
+							{
+								selectedCtl.Add(ctl);
+								ctl.PrX = ctl.X;
+								ctl.PrY = ctl.Y;
+								ctl.Selected = true;
+							}
+						}
 					};
-					
+					i.OnSettingModify = (setting) => {
+						c.RefreshAnySetting();
+					};
+					canvas.List.Add(c);
 					list.New(i, false);
-					
 				}
 				switch (f.FileName.Substring(f.FileName.LastIndexOf('.') + 1))
 				{
 					case "cmx":
 						{
-							BgImage = Image.FromFile(SettingModel.BackGroundImg);
+							BgImage = SettingModel.Image;
 							break;
 						}
 				}
-				this.Invalidate();
+				canvasNeedRefresh = true;
 			}
 		}
 		private void 新建ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			ClearInfoControl();
+			canvas.List.Clear();
 			this.BgImage = null;
 			this.BeginInvoke((EventHandler)delegate {
 				var info = new InfoShower()
@@ -159,52 +328,18 @@ namespace 批模板生成
 				};
 				InfoShower.ShowOnce(info);
 			});
+			canvasNeedRefresh = true;
 		}
-		private const string defaultText = "暂无数据,右键呼出菜单~";
-
 		public Image BgImage { get => bgImage; set {
 				bgImage = value;
 				if (bgImage != null)
 				{
-					ClientSize = new Size(bgImage.Width, bgImage.Height);
+					//ClientSize = new Size(bgImage.Width, bgImage.Height);
+					CanvasMain.Size = new Size(bgImage.Width, bgImage.Height);
+					CanvasMain.BackgroundImage=bgImage;
+					canvasNeedRefresh = true;
 				}
 			} }
-
-		protected override void OnPaint(PaintEventArgs e)
-		{
-			if (BgImage == null)
-			{
-				e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
-				var strSize = e.Graphics.MeasureString(defaultText,Font);
-				e.Graphics.DrawString(defaultText,Font,Brushes.Gray,(Width- strSize.Width)*0.5f,(Height- strSize.Height)*0.5f);
-			}
-			else
-			{
-				e.Graphics.DrawImage(BgImage, 0, 0, ClientSize.Width, ClientSize.Height);
-			}
-		}
-
-		protected override void OnResize(EventArgs e)
-		{
-			Invalidate();
-		}
-
-		private void ClearInfoControl()
-		{
-			var list = new List<InfoControl>();
-			foreach (var ctl in Controls)
-			{
-				if (ctl is InfoControl infoCtl)
-				{
-					list.Add(infoCtl);
-				}
-			}
-			foreach(var ctl in list)
-			{
-				this.Controls.Remove(ctl);
-			}
-			Invalidate();
-		}
 		private void 保存ToolStripMenuItem_Click_1(object sender, EventArgs e)
 		{
 			var f = new SaveFileDialog()
@@ -214,7 +349,7 @@ namespace 批模板生成
 			};
 			if (f.ShowDialog() == DialogResult.OK)
 			{
-				SettingModel.Save(list.list, f.FileName, f.FileName.Substring(f.FileName.LastIndexOf('.') + 1));
+				SettingModel.Save(list.List, f.FileName, f.FileName.Substring(f.FileName.LastIndexOf('.') + 1),canvas);
 			}
 		}
 
@@ -300,7 +435,6 @@ namespace 批模板生成
 
 		private void 导出ToolStripMenuItem_Click_1(object sender, EventArgs e)
 		{
-			list.OutputModle = true;
 			if (OutputAllImg()) {
 				this.BeginInvoke((EventHandler)delegate {
 					var info = new InfoShower()
@@ -313,7 +447,6 @@ namespace 批模板生成
 					InfoShower.ShowOnce(info);
 				});
 			}
-			list.OutputModle = true;
 		}
 
 		private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -333,40 +466,108 @@ namespace 批模板生成
 		private void 信息框ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			var l = new InfoSetting();
-			var c = new InfoControl(l)
+			var c = new Element(l)
 			{
-				Parent = this,
-				ContextMenuStrip=this.ContextMenuStrip
+				OnCtlSelected = (ctl, mutiSelect) => {
+					if (ctl != null)
+					{
+						selectedCtl.Add(ctl);
+						ctl.Selected = true;
+					}
+				}
 			};
-
+			canvas.List.Add(c);
+			l.OnSettingModify = (setting) => {
+				c.RefreshAnySetting();
+				canvasNeedRefresh = true;
+			};
 			list.New(l);
+			canvasNeedRefresh = true;
+		}
+
+		private void 编辑ToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void 复制信息框ToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			foreach(var item in selectedCtl)
+			{
+				var l = new InfoSetting() {
+					AutoNewLine=item.Setting.AutoNewLine,
+					FontName=item.Setting.FontName,
+					FontSize=item.Setting.FontSize,
+					TagName=item.Setting.TagName,
+					ForeColor=item.Setting.ForeColor,
+					H=	item.Setting.H,
+					W = item.Setting.W,
+					X = item.Setting.X,
+					Y = item.Setting.Y,
+					TargetCol=item.Setting.TargetCol
+				};
+				var c = new Element(l)
+				{
+					OnCtlSelected = (ctl, mutiSelect) => {
+						if (ctl != null)
+						{
+							selectedCtl.Add(ctl);
+							ctl.Selected = true;
+						}
+					},
+					PrX=l.X,
+					PrY=l.Y
+				};
+				canvas.List.Add(c);
+				l.OnSettingModify = (setting) => {
+					c.RefreshAnySetting();
+					canvasNeedRefresh = true;
+				};
+				list.New(l,false);
+				
+				var info = new InfoShower()
+				{
+
+					Title = "复制对象",
+					Info=item.Text,
+					TitleColor = Color.FromArgb(255, 50, 200, 50),
+					ExistTime = 5000,
+					
+				};
+				InfoShower.ShowOnce(info);
+			}
+			canvasNeedRefresh = true;
 		}
 
 		private void 尺寸ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			var f = new FrmSizeSetting(canvas.Width,canvas.Height,(w,h)=> {
-				canvas.Width = w;
-				canvas.Height = h;
-				var lastW = w;
-				var lastH = h;
+			var f = new FrmSizeSetting(canvas.ScaleWidth, canvas.ScaleHeight, (w,h)=> {
+				var lastW = canvas.ScaleWidth;
+				var lastH = canvas.ScaleHeight;
+				canvas.ScaleWidth = w;
+				canvas.ScaleHeight = h;
+				canvas.OnSizeModefy?.Invoke(w,h);
+				canvasNeedRefresh = true;
 				var info = new InfoShower()
 				{
 
 					Title = "尺寸已修改",
-					Info = string.Format("已修改尺寸为{0}*{1}点击此处以恢复输出图像尺寸", w, h),
+					Info = string.Format("已修改尺寸为{0}*{1}点击此处以恢复输出图像尺寸{2}*{3}", w, h,lastW,lastH),
 					TitleColor = Color.FromArgb(255, 50, 200, 50),
 					ExistTime = 5000,
 					CallBack = () => {
-						canvas.Width = lastW;
-						canvas.Height = lastH;
+						canvas.ScaleWidth = lastW;
+						canvas.ScaleHeight = lastH;
 						var info2 = new InfoShower()
 						{
 							Title = "尺寸已恢复",
-							Info = string.Format("已恢复尺寸为{0}*{1}", w, h),
+							Info = string.Format("已恢复尺寸为{0}*{1}", lastW, lastH),
 							TitleColor = Color.FromArgb(255, 50, 200, 50),
 							ExistTime = 5000
 						};
 						InfoShower.ShowOnce(info2);
+						canvas.OnSizeModefy?.Invoke(canvas.ScaleWidth, canvas.ScaleHeight);
+						canvasNeedRefresh = true;
 					}
 				};
 				InfoShower.ShowOnce(info);

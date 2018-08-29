@@ -1,4 +1,5 @@
 ﻿using DotNet4.Utilities.UtilReg;
+using Inst;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,11 +27,48 @@ namespace 批模板生成
 			this.IpBindingCol.Text = setting.TargetCol;
 			this.IpTagName.Text = setting.TagName;
 			this.CmdAutoNewLine.Checked = setting.AutoNewLine;
+			foreach(var ctl in GrpAlign.Controls)
+			{
+				if(ctl is Button cmd)
+				{
+					if (cmd.Name.Substring(8)==setting.TextAlign) {
+						cmd.Enabled = false;
+						break;
+					}
+				}
+			}
 			fontSet.Font = new Font(setting.FontName, setting.FontSize);
 			colorSet.Color = setting.ForeColor;
-			CmdDelete.Enabled = !(setting.AbortSetting == null);
+			foreach (var ctl in GrpAlign.Controls)
+			{
+				if (ctl is Button cmd)
+				{
+					if (cmd.Name.Contains("CmdAlign"))
+					{
+						cmd.Click += (x, xx) =>
+						{
+							ResetCmdAlign();
+							setting.TextAlign = cmd.Name.Substring(8);
+							cmd.Enabled = false;
+						};
+					}
+				}
+			}
 		}
-
+		
+		private void ResetCmdAlign()
+		{
+			CmdAlignCenter.Enabled = true;
+			CmdAlignCenterLeft.Enabled = true;
+			CmdAlignCenterRight.Enabled = true;
+			CmdAlignTopLeft.Enabled = true;
+			CmdAlignTopCenter.Enabled = true;
+			CmdAlignTopRight.Enabled = true;
+			CmdAlignBottomLeft.Enabled = true;
+			CmdAlignBottomRight.Enabled = true;
+			CmdAlignBottomCenter.Enabled = true;
+			GrpAlign.Focus();
+		}
 		private void CmdOk_Click(object sender, EventArgs e)
 		{
 			if (IpBindingCol.Text.Length == 0)
@@ -59,17 +97,30 @@ namespace 批模板生成
 
 		private void CmdDelete_Click(object sender, EventArgs e)
 		{
-			setting.AbortSetting?.Invoke();
 			this.Close();
 		}
 
 		private void CmdFontSet_Click(object sender, EventArgs e)
 		{
-			if (fontSet.ShowDialog() == DialogResult.OK) {
-				setting.FontName = fontSet.Font.Name;
-				setting.FontSize = fontSet.Font.Size;
+			try
+			{
+				if (fontSet.ShowDialog() == DialogResult.OK)
+				{
+					setting.FontName = fontSet.Font.Name;
+					setting.FontSize = fontSet.Font.Size;
+				}
+
 			}
-			
+			catch (Exception ex)
+			{
+				var f = new InfoShower()
+				{
+					Title = "设置字体失败",
+					Info = ex.Message,
+					TitleColor=Color.FromArgb(255,200,100)
+				};
+				InfoShower.ShowOnce(f);
+			}
 		}
 
 		private void InfoInput_Load(object sender, EventArgs e)

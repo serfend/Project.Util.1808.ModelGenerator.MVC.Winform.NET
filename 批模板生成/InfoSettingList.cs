@@ -7,34 +7,22 @@ namespace 批模板生成
 {
 	public class InfoSettingList
 	{
-		public List<InfoSetting> list;
+		private List<InfoSetting> list;
 		public InfoSettingList()
 		{
-			list = new List<InfoSetting>();
+			List = new List<InfoSetting>();
 		}
-		private bool opModle;
-		public bool OutputModle { get=>opModle;set {
-				opModle = value;
-				foreach (var l in list)
-				{
-					l.OnOutputModle(opModle);
-				}
-			} }
+
+		public List<InfoSetting> List { get => list; set => list = value; }
 
 		public void New(InfoSetting l,bool modify=true)
 		{
-			//var l = new InfoSetting();
-			
 			l.SettingModify(modify);
-			list.Add(l);
+			List.Add(l);
 		}
 		public void Clear()
 		{
-			foreach(var i in list)
-			{
-				i.AbortSetting.Invoke();
-			}
-			list.Clear();
+			List.Clear();
 		}
 	}
 }

@@ -13,26 +13,29 @@ namespace DotNet4.Utilities.UtilDrawing
 {
 	public class Canvas
 	{
-		private int height;
 		private List<Element> list;
-		private int width;
+		private int scaleWidth;
+		private int scaleHeight;
 		private Image backImage;
-		public int Width { get => width; set => width = value; }
-		public int Height { get => height; set => height = value; }
+		private double scalePercent=1;
+		public Action<int, int> OnSizeModefy;
 		public List<Element> List { get => list; set => list = value; }
 		public Image BackImage { get => backImage; set => backImage = value; }
 		public bool Cancel { get => cancel; set => cancel = value; }
+		public int ScaleWidth { get => scaleWidth; set => scaleWidth = value; }
+		public int ScaleHeight { get => scaleHeight; set => scaleHeight = value; }
+		public double ScalePercent { get => scalePercent; set => scalePercent = value; }
 
 		private bool cancel;
 		public Canvas()
 		{
-			width = height = 1;
 			List = new List<Element>();
 			SettingModel.OnBckSizeModefy = (w,h) => {
-				var lastW = Width;
-				var lastH =Height;
-				Width = w;
-				Height = h;
+				var lastW = ScaleWidth;
+				var lastH = ScaleHeight;
+				ScaleWidth = w;
+				ScaleHeight = h;
+				OnSizeModefy?.Invoke(w,h);
 				var info = new InfoShower()
 					{
 						
@@ -41,8 +44,8 @@ namespace DotNet4.Utilities.UtilDrawing
 						TitleColor = Color.FromArgb(255, 50, 200, 50),
 						ExistTime = 5000,
 						CallBack = () => {
-							Width = lastW;
-							Height =lastH;
+							ScaleWidth = lastW;
+							ScaleHeight = lastH;
 							var info2 = new InfoShower()
 							{
 								Title = "更改已生效",
@@ -50,6 +53,7 @@ namespace DotNet4.Utilities.UtilDrawing
 								ExistTime = 5000
 							};
 							InfoShower.ShowOnce(info2);
+							OnSizeModefy?.Invoke(ScaleWidth, ScaleHeight);
 						}
 					};
 					InfoShower.ShowOnce(info);
@@ -85,15 +89,15 @@ namespace DotNet4.Utilities.UtilDrawing
 			//获取指定mimeType的mimeType的ImageCodecInfo
 			var codecInfos = ImageCodecInfo.GetImageEncoders();
 			var codelist = new StringBuilder();
-			foreach(var codec in codecInfos)
+			for(int i= codecInfos.Length-1; i>=0;i--)
 			{
+				var codec = codecInfos[i];
 				codelist.AppendFormat("{0}|", codec.CodecName).AppendFormat("*.{0}|", codec.FormatDescription);
 			}
 			var f = new SaveFileDialog() {
 				Title="输出",
 				Filter= codelist.ToString(0,codelist.Length-1),
 				FileName=Program.RegMain.In("Settting").GetInfo("OutputFilename"),
-				DefaultExt="png",
 			};
 			if (f.ShowDialog()==DialogResult.Cancel) {
 				NoticeOnCancel(0, 0,"用户取消导出");
@@ -120,11 +124,11 @@ namespace DotNet4.Utilities.UtilDrawing
 						NoticeOnCancel(i-2, rowCount - i+1,"用户主动取消");
 						return;
 					}
-					using (var img = new Bitmap(Width, Height))
+					using (var img = new Bitmap(ScaleWidth, ScaleHeight))
 					{
 						var tmpG = Graphics.FromImage(img);
 						tmpG.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-						if(backImage!=null)tmpG.DrawImage(backImage, 0, 0, Width, Height);
+						if(backImage!=null)tmpG.DrawImage(backImage, 0, 0, ScaleWidth, ScaleHeight);
 						var fileName =string.Format("{0}{1}{2}",fileDic ,fileFormat, sh.Cells[i, 1].Value);
 						foreach (var ctl in list)
 						{
@@ -132,7 +136,7 @@ namespace DotNet4.Utilities.UtilDrawing
 							contains = dic.ContainsKey(ctl.BindingFiled);
 							var thisValue = contains ? ((Microsoft.Office.Interop.Excel.Range)sh.Cells[i, dic[ctl.BindingFiled]]).Value : "";
 							ctl.Text = Convert.ToString(thisValue);
-							ctl.DrawToCanvas(ref tmpG);
+							ctl.DrawToCanvas(tmpG,true);
 							if (Cancel)
 							{
 								NoticeOnCancel(i - 2, rowCount - i + 1,"用户主动取消");
@@ -173,45 +177,41 @@ namespace DotNet4.Utilities.UtilDrawing
 		}
 		
 	}
-	public class Element:IDisposable
+	public class Element: IDisposable
 	{
-		private int h;
-		private Color backColor;
-		private string bindingFiled;
-		private Font font;
 		private string text;
-		private int x;
-		private int y;
-		private int w;
-		private Color foreColor;
-		
 
-		public int X { get => x; set => x = value; }
-		public int Y { get => y; set => y = value; }
-		public int W { get => w; set
-			{
-				w = value;
-			} }
-		public int H { get => h; set {
-				h = value;
-			} }
-		public void Resize(int w,int h)
+		public Action<Element,bool> OnCtlSelected;
+		private bool selected;
+		public InfoSetting Setting;
+		public Element(InfoSetting setting)
 		{
-			this.w = w;
-			this.h = h;
+			this.Setting = setting;
+			AutoNewLine= setting.AutoNewLine;
+			RefreshAnySetting();
 		}
-
-		public Color ForeColor { get => foreColor;set{
+		public void RefreshAnySetting()
+		{
+			ForeColor = Setting.ForeColor;
+			Font = new Font(Setting.FontName, Setting.FontSize);
+			Text = Setting.TagName == "" ? Setting.TargetCol : Setting.TagName;
+		}
+		public int X { get => Setting.X; set =>Setting.X=value; }
+		public int Y { get => Setting.Y; set => Setting.Y = value; }
+		public int W { get => Setting.W; set => Setting.W = value; }
+		public int H { get => Setting.H; set => Setting.H=value; }
+		public Color ForeColor { get => Setting.ForeColor;set{
 				foreBrush = new SolidBrush(value);
-				foreColor = value;
-			} }
-		public Color BackColor { get => backColor; set {
-				backBrush = new SolidBrush(value);
-				backColor = value;
+				Setting.ForeColor = value;
 			} }
 		private Brush foreBrush,backBrush;
-		public string BindingFiled { get => bindingFiled; set => bindingFiled = value; }
-		public Font Font { get => font; set => font = value; }
+		public string BindingFiled { get => Setting.TargetCol; set => Setting.TargetCol = value; }
+		public Font Font { get => font; set {
+				font = value;
+				Setting.FontName = font.Name;
+				Setting.FontSize = font.Size;
+			} }
+		private Font font;
 		public string Text { get => text; set {
 				text = value;
 				if (text == null) {
@@ -250,16 +250,22 @@ namespace DotNet4.Utilities.UtilDrawing
 				}
 			} }
 		public bool AutoNewLine { get => autoNewLine; set => autoNewLine = value; }
+		public bool Selected { get => selected; set => selected = value; }
+		public int PrX, PrY;
 
 		private List<string> autoNewLineInfo;
 		private bool autoNewLine;
 		private Image img;
 
-		public void DrawToCanvas(ref Graphics g)
+		public void DrawToCanvas( Graphics g,bool outputMode)
 		{
+			if (!outputMode)
+			{
+				g.FillRectangle(Brushes.ForestGreen, X,Y,W,H);
+			}
 			if (img != null)
 			{
-				g.DrawImage(img, X, Y, W, H);
+				g.DrawImage(img,  X, Y, W, H);
 			}
 			else
 			{
@@ -279,14 +285,79 @@ namespace DotNet4.Utilities.UtilDrawing
 				}
 				else
 				{
+					if (Text == null) return;
 					string outInfo = "";
 					if (Text.Length == 2) outInfo = Text.Substring(0, 1) + " " + Text.Substring(1, 1); else outInfo = Text;
-					g.DrawString(Text, Font, foreBrush, X + 0.5f * (W - strSize.Width), Y + 0.5f * (H - strSize.Height));
+					float newX=X, newY=Y;
+					switch (Setting.TextAlign)
+					{
+						case "Center": {
+								newX = X + 0.5f * (W - strSize.Width);
+								newY = Y + 0.5f * (H - strSize.Height);
+								break;
+							}
+						case "CenterLeft": {
+								newX = X ;
+								newY = Y + 0.5f * (H - strSize.Height);
+								break;
+							}
+						case "CenterRight":
+							{
+								newX = X+H-strSize.Width;
+								newY = Y + 0.5f * (H - strSize.Height);
+								break;
+							}
+						case "TopCenter":
+							{
+								newX = X + 0.5f * (W - strSize.Width);
+								newY = Y;
+								break;
+							}
+						case "TopLeft":
+							{
+								newX = X;
+								newY = Y;
+								break;
+							}
+						case "TopRight":
+							{
+								newX = X + H - strSize.Width;
+								newY = Y;
+								break;
+							}
+						case "BottomCenter":
+							{
+								newX = X + 0.5f * (W - strSize.Width);
+								newY = Y + H - strSize.Height;
+								break;
+							}
+						case "BottomLeft":
+							{
+								newX = X;
+								newY = Y + H - strSize.Height;
+								break;
+							}
+						case "BottomRight":
+							{
+								newX = X + H - strSize.Width;
+								newY = Y + H - strSize.Height;
+								break;
+							}
+					}
+					if(outInfo != "") g.DrawString(outInfo, Font, foreBrush,newX, newY);
 				}
 
 			}
 		}
-
+		public void HoverPaint(Graphics g) {
+			if (selected)
+			{
+				g.FillEllipse(Brushes.White, X - dis, Y - dis, size, size);
+				g.FillEllipse(Brushes.White, X + W - dis, Y - dis, size, size);
+				g.FillEllipse(Brushes.White, X - dis, Y + H - dis, size, size);
+				g.FillEllipse(Brushes.White, X + W - dis, Y + H - dis, size, size);
+			}
+		}
 		#region IDisposable Support
 		private bool disposedValue = false; // 要检测冗余调用
 
@@ -315,7 +386,18 @@ namespace DotNet4.Utilities.UtilDrawing
 			// 请勿更改此代码。将清理代码放入以上 Dispose(bool disposing) 中。
 			Dispose(true);
 		}
-		#endregion
 
+
+		#endregion
+		internal bool Contain(int x, int y)
+		{
+			return x > X && y > Y && x < X + W && y < Y + H;
+		}
+		internal bool HoverContain(int x, int y)
+		{
+			
+			return false;
+		}
+		public static int dis = 5, size = 10;
 	}
 }
