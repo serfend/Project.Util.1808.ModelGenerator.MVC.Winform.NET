@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -301,8 +302,16 @@ namespace 批模板生成
 			};
 			if (t.ShowDialog() == DialogResult.OK)
 			{
-				this.BgImage = Image.FromFile(t.FileName);
-				SettingModel.BackGroundImg = t.FileName;
+				var nowPath = Application.StartupPath;
+				var relatePath = t.FileName.Replace(nowPath, "");
+				if (relatePath.StartsWith("\\")) relatePath = relatePath.Substring(1);
+				if (relatePath.Contains(":"))
+				{
+					File.Copy(t.FileName, nowPath + "\\" + t.SafeFileName);
+					relatePath = t.SafeFileName;
+				}
+				this.BgImage = Image.FromFile(relatePath);
+				SettingModel.BackGroundImg = relatePath;
 				canvasNeedRefresh = true;
 			}
 		}
@@ -320,8 +329,7 @@ namespace 批模板生成
 				canvas.List.Clear();
 				var l = SettingModel.Load(f.FileName,out string bg,out int w,out int h);//TODO 输入文件
 				if (bg.Length > 0) {
-					BgImage = Image.FromFile(bg);
-					SettingModel.OnBackImgModefy(bgImage);
+					SettingModel.BackGroundImg = bg;
 				}
 				canvas.OnSizeModefy(w, h);
 				if (l == null) return;
@@ -358,6 +366,7 @@ namespace 批模板生成
 		private void 新建ToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			canvas.List.Clear();
+			SettingModel.BackGroundImg = "";
 			this.BgImage = null;
 			this.BeginInvoke((EventHandler)delegate {
 				var info = new InfoShower()
@@ -376,9 +385,9 @@ namespace 批模板生成
 				{
 					//ClientSize = new Size(bgImage.Width, bgImage.Height);
 					CanvasMain.Size = new Size(bgImage.Width, bgImage.Height);
-					CanvasMain.BackgroundImage=bgImage;
-					canvasNeedRefresh = true;
 				}
+				CanvasMain.BackgroundImage = bgImage;
+				canvasNeedRefresh = true;
 			} }
 		private void 保存ToolStripMenuItem_Click_1(object sender, EventArgs e)
 		{
@@ -519,8 +528,11 @@ namespace 批模板生成
 			canvas.List.Add(c);
 			l.OnSettingModify = (setting) => {
 				c.RefreshAnySetting();
+				c.MoveConfirm();
 				canvasNeedRefresh = true;
+
 			};
+			
 			list.New(l);
 			canvasNeedRefresh = true;
 		}
@@ -618,6 +630,16 @@ namespace 批模板生成
 				var f = new InfoShower() { Title="暂无需要清除的信息框",Info="只有未绑定字段的信息框会被清除"};
 				InfoShower.ShowOnce(f);
 			}
+		}
+
+		private void 删除选中ToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			foreach(var s in selectedCtl)
+			{
+				canvas.List.Remove(s);
+			}
+			selectedCtl.Clear();
+			canvasNeedRefresh = true;
 		}
 
 		private void 尺寸ToolStripMenuItem_Click(object sender, EventArgs e)

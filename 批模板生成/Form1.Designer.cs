@@ -44,8 +44,9 @@ namespace 批模板生成
 			this.背景ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.尺寸ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.复制信息框ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.关于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.清除无效框ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.关于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.删除选中ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.MenuMain.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -56,7 +57,7 @@ namespace 批模板生成
             this.编辑ToolStripMenuItem,
             this.关于ToolStripMenuItem});
 			this.MenuMain.Name = "MenuMain";
-			this.MenuMain.Size = new System.Drawing.Size(181, 92);
+			this.MenuMain.Size = new System.Drawing.Size(141, 70);
 			// 
 			// 文件ToolStripMenuItem
 			// 
@@ -68,14 +69,14 @@ namespace 批模板生成
             this.导出ToolStripMenuItem});
 			this.文件ToolStripMenuItem.Name = "文件ToolStripMenuItem";
 			this.文件ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F)));
-			this.文件ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.文件ToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
 			this.文件ToolStripMenuItem.Text = "文件";
 			// 
 			// 新建ToolStripMenuItem
 			// 
 			this.新建ToolStripMenuItem.Name = "新建ToolStripMenuItem";
 			this.新建ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-			this.新建ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.新建ToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
 			this.新建ToolStripMenuItem.Text = "新建";
 			this.新建ToolStripMenuItem.Click += new System.EventHandler(this.新建ToolStripMenuItem_Click);
 			// 
@@ -83,7 +84,7 @@ namespace 批模板生成
 			// 
 			this.读取ToolStripMenuItem.Name = "读取ToolStripMenuItem";
 			this.读取ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-			this.读取ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.读取ToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
 			this.读取ToolStripMenuItem.Text = "读取";
 			this.读取ToolStripMenuItem.Click += new System.EventHandler(this.读取ToolStripMenuItem_Click);
 			// 
@@ -91,21 +92,21 @@ namespace 批模板生成
 			// 
 			this.保存ToolStripMenuItem.Name = "保存ToolStripMenuItem";
 			this.保存ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-			this.保存ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.保存ToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
 			this.保存ToolStripMenuItem.Text = "保存";
 			this.保存ToolStripMenuItem.Click += new System.EventHandler(this.保存ToolStripMenuItem_Click_1);
 			// 
 			// toolStripMenuItem1
 			// 
 			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(177, 6);
+			this.toolStripMenuItem1.Size = new System.Drawing.Size(165, 6);
 			// 
 			// 导出ToolStripMenuItem
 			// 
 			this.导出ToolStripMenuItem.Name = "导出ToolStripMenuItem";
 			this.导出ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt) 
             | System.Windows.Forms.Keys.S)));
-			this.导出ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.导出ToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
 			this.导出ToolStripMenuItem.Text = "导出";
 			this.导出ToolStripMenuItem.Click += new System.EventHandler(this.导出ToolStripMenuItem_Click_1);
 			// 
@@ -117,10 +118,11 @@ namespace 批模板生成
             this.背景ToolStripMenuItem,
             this.尺寸ToolStripMenuItem,
             this.复制信息框ToolStripMenuItem,
-            this.清除无效框ToolStripMenuItem});
+            this.清除无效框ToolStripMenuItem,
+            this.删除选中ToolStripMenuItem});
 			this.编辑ToolStripMenuItem.Name = "编辑ToolStripMenuItem";
 			this.编辑ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.E)));
-			this.编辑ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+			this.编辑ToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
 			this.编辑ToolStripMenuItem.Text = "编辑";
 			this.编辑ToolStripMenuItem.Click += new System.EventHandler(this.编辑ToolStripMenuItem_Click);
 			// 
@@ -164,14 +166,6 @@ namespace 批模板生成
 			this.复制信息框ToolStripMenuItem.Text = "复制信息框";
 			this.复制信息框ToolStripMenuItem.Click += new System.EventHandler(this.复制信息框ToolStripMenuItem_Click);
 			// 
-			// 关于ToolStripMenuItem
-			// 
-			this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
-			this.关于ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.A)));
-			this.关于ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.关于ToolStripMenuItem.Text = "关于";
-			this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
-			// 
 			// 清除无效框ToolStripMenuItem
 			// 
 			this.清除无效框ToolStripMenuItem.Name = "清除无效框ToolStripMenuItem";
@@ -180,6 +174,22 @@ namespace 批模板生成
 			this.清除无效框ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
 			this.清除无效框ToolStripMenuItem.Text = "清除无效框";
 			this.清除无效框ToolStripMenuItem.Click += new System.EventHandler(this.清除无效框ToolStripMenuItem_Click);
+			// 
+			// 关于ToolStripMenuItem
+			// 
+			this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
+			this.关于ToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.A)));
+			this.关于ToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+			this.关于ToolStripMenuItem.Text = "关于";
+			this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
+			// 
+			// 删除选中ToolStripMenuItem
+			// 
+			this.删除选中ToolStripMenuItem.Name = "删除选中ToolStripMenuItem";
+			this.删除选中ToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+			this.删除选中ToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+			this.删除选中ToolStripMenuItem.Text = "删除选中";
+			this.删除选中ToolStripMenuItem.Click += new System.EventHandler(this.删除选中ToolStripMenuItem_Click);
 			// 
 			// FrmMain
 			// 
@@ -217,6 +227,7 @@ namespace 批模板生成
 		private System.Windows.Forms.ToolStripMenuItem 导出ToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem 复制信息框ToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem 清除无效框ToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem 删除选中ToolStripMenuItem;
 	}
 }
 

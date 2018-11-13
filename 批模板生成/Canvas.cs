@@ -188,7 +188,6 @@ namespace DotNet4.Utilities.UtilDrawing
 		public Element(InfoSetting setting)
 		{
 			this.Setting = setting;
-			AutoNewLine= setting.AutoNewLine;
 			RefreshAnySetting();
 		}
 		public void RefreshAnySetting()
@@ -210,6 +209,9 @@ namespace DotNet4.Utilities.UtilDrawing
 			Y = PrY + y;
 			W = PrW + w;
 			H = PrH + h;
+			W = W <= 0 ? 1 : W;
+			H = H <= 0 ? 1 : H;
+			Text = Text+"";
 		}
 
 		/// <summary>
@@ -244,7 +246,13 @@ namespace DotNet4.Utilities.UtilDrawing
 				{
 					try
 					{
-						img = Image.FromFile(Text.Replace(" ",""));
+						var newImgPath = Text.Replace(" ", "");
+						if (imgPath != newImgPath)
+						{
+							imgPath = newImgPath;
+							img = Image.FromFile(Text.Replace(" ", ""));
+						}
+						
 					}
 					catch (Exception ex)
 					{
@@ -254,30 +262,33 @@ namespace DotNet4.Utilities.UtilDrawing
 				}
 				else
 				{
-					
-					autoNewLineInfo = new List<string>();
-					var cstr = new StringBuilder();
-					int index = 0;
-					var g = Graphics.FromImage(new Bitmap(W,H));
-					while (index < Text.Length)
+					if (Setting.AutoNewLine)
 					{
-						while (g.MeasureString(cstr.ToString(), Font).Width < W & index < Text.Length)
+						autoNewLineInfo = new List<string>();
+						var cstr = new StringBuilder();
+						int index = 0;
+						var g = Graphics.FromImage(new Bitmap(W, H));
+						while (index < Text.Length)
 						{
-							cstr.Append(Text[index++]);
+							while (g.MeasureString(cstr.ToString(), Font).Width < W & index < Text.Length)
+							{
+								cstr.Append(Text[index++]);
+							}
+							if (index < Text.Length) { cstr.Remove(cstr.Length-1, 1);index--; }
+							autoNewLineInfo.Add(cstr.ToString());
+							cstr.Clear();
 						}
-						autoNewLineInfo.Add(cstr.ToString());
-						cstr.Clear();
-					}
+					}	
+					
 					img = null;
 				}
 			} }
-		public bool AutoNewLine { get => autoNewLine; set => autoNewLine = value; }
 		public bool Selected { get => selected; set => selected = value; }
 		public int PrX, PrY,PrW,PrH;
 
 		private List<string> autoNewLineInfo;
-		private bool autoNewLine;
 		private Image img;
+		private string imgPath;
 
 		public void DrawToCanvas( Graphics g,bool outputMode)
 		{
@@ -293,7 +304,7 @@ namespace DotNet4.Utilities.UtilDrawing
 			{
 				var strSize = g.MeasureString(Text, Font);
 
-				if (AutoNewLine)
+				if (Setting.AutoNewLine)
 				{
 					int index = 0;
 
@@ -325,7 +336,7 @@ namespace DotNet4.Utilities.UtilDrawing
 							}
 						case "CenterRight":
 							{
-								newX = X+H-strSize.Width;
+								newX = X+W-strSize.Width;
 								newY = Y + 0.5f * (H - strSize.Height);
 								break;
 							}
@@ -343,7 +354,7 @@ namespace DotNet4.Utilities.UtilDrawing
 							}
 						case "TopRight":
 							{
-								newX = X + H - strSize.Width;
+								newX = X + W - strSize.Width;
 								newY = Y;
 								break;
 							}
@@ -361,7 +372,7 @@ namespace DotNet4.Utilities.UtilDrawing
 							}
 						case "BottomRight":
 							{
-								newX = X + H - strSize.Width;
+								newX = X + W - strSize.Width;
 								newY = Y + H - strSize.Height;
 								break;
 							}

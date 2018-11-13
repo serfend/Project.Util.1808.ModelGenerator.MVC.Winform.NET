@@ -54,7 +54,9 @@ namespace 批模板生成
 					}
 				}
 			}
+			this.Deactivate += (xx, xxx) => { if(!OnSelectSetting)this.Close(); };
 		}
+		private bool OnSelectSetting = false;
 		
 		private void ResetCmdAlign()
 		{
@@ -104,12 +106,13 @@ namespace 批模板生成
 		{
 			try
 			{
+				OnSelectSetting = true;
 				if (fontSet.ShowDialog() == DialogResult.OK)
 				{
 					setting.FontName = fontSet.Font.Name;
 					setting.FontSize = fontSet.Font.Size;
 				}
-
+				OnSelectSetting = false;
 			}
 			catch (Exception ex)
 			{
@@ -130,10 +133,12 @@ namespace 批模板生成
 
 		private void CmdForeColor_Click(object sender, EventArgs e)
 		{
+			OnSelectSetting = true;
 			if (colorSet.ShowDialog() == DialogResult.OK)
 			{
 				setting.ForeColor = colorSet.Color;
 			}
+			OnSelectSetting = false;
 		}
 	}
 }

@@ -25,8 +25,15 @@ namespace 批模板生成
 				backGroundImg = value;
 				try
 				{
-					Image = Image.FromFile(backGroundImg);
-					OnBckSizeModefy?.Invoke(Image.Width, Image.Height);
+					if(backGroundImg==null|| backGroundImg.Length == 0)
+					{
+						Image = null;
+					}
+					else
+					{
+						Image = Image.FromFile(backGroundImg);
+						OnBckSizeModefy?.Invoke(Image.Width, Image.Height);
+					}
 					OnBackImgModefy?.Invoke(Image);
 				}
 				catch (FileNotFoundException ex)
