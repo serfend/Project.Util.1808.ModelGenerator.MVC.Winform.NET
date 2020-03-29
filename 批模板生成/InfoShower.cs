@@ -70,14 +70,10 @@ namespace Inst
 			Show();
 			this.BeginInvoke((EventHandler)delegate {
 				// 在窗口弹出时做以下处理
-				
 				TopMost = true;
-				
 				ShowOutStamp = Environment.TickCount;
 				this.Top = TargetY;
 				var targetX = Screen.PrimaryScreen.Bounds.Right - this.Width;
-
-
 				showOutFlash = new Thread(() =>
 				{
 					try
