@@ -8,69 +8,99 @@ using System.Drawing.Imaging;
 using 批模板生成;
 using Inst;
 using System.Windows.Forms;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace DotNet4.Utilities.UtilDrawing
 {
 	public class Canvas
 	{
-		private List<Element> list;
-		private int scaleWidth;
-		private int scaleHeight;
 		private Image backImage;
-		private double scalePercent=1;
+		[JsonIgnoreAttribute]
 		public Action<int, int> OnSizeModefy;
-		public List<Element> List { get => list; set => list = value; }
-		public Image BackImage { get => backImage; set => backImage = value; }
-		public bool Cancel { get => cancel; set => cancel = value; }
-		public int ScaleWidth { get => scaleWidth; set => scaleWidth = value; }
-		public int ScaleHeight { get => scaleHeight; set => scaleHeight = value; }
-		public double ScalePercent { get => scalePercent; set => scalePercent = value; }
+		[JsonIgnoreAttribute]
+		public List<Element> List { get; set; }
 
-		private bool cancel;
+		private Image BackImage { get => backImage;
+			set
+			{
+				backImage = value;
+				RefreshNewBackImage();
+			}
+		}
+
+		public Image GetBckImage()
+		{
+			return backImage;
+		}
+
+		public string bckImagePath { get; set; }
+		public void SetBckImage(string path)
+		{
+			if(path!=null)
+				BackImage = Image.FromFile(path);
+			else
+			{
+				BackImage = null;
+			}
+			bckImagePath = path;
+		}
+		private void RefreshNewBackImage()
+		{
+			var lastW = ScaleWidth;
+			var lastH = ScaleHeight;
+			int w = backImage?.Width ?? 0;
+			int h = backImage?.Height??0;
+			ScaleWidth = w;
+			ScaleHeight = h;
+			OnSizeModefy?.Invoke(w,h);
+			var info = new InfoShower()
+			{
+						
+				Title = "背景图已修改",
+				Info=string.Format("已修改尺寸为{0}*{1}点击此处以恢复输出图像尺寸",w,h),
+				TitleColor = Color.FromArgb(255, 50, 200, 50),
+				ExistTime = 5000,
+				CallBack = () => {
+					ScaleWidth = lastW;
+					ScaleHeight = lastH;
+					var info2 = new InfoShower()
+					{
+						Title = "更改已生效",
+						TitleColor = Color.FromArgb(255, 50, 200, 50),
+						ExistTime = 5000
+					};
+					InfoShower.ShowOnce(info2);
+					OnSizeModefy?.Invoke(ScaleWidth, ScaleHeight);
+				}
+			};
+			InfoShower.ShowOnce(info);
+		}
+		/// <summary>
+		/// 当前操作已取消，可进行新的操作
+		/// </summary>
+		[JsonIgnoreAttribute]
+		public bool ActionIsCancel { get; set; }
+
+		public int ScaleWidth { get; set; }
+
+		public int ScaleHeight { get; set; }
+
+		public double ScalePercent { get; set; } = 1;
+
 		public Canvas()
 		{
 			List = new List<Element>();
-			SettingModel.OnBckSizeModefy = (w,h) => {
-				var lastW = ScaleWidth;
-				var lastH = ScaleHeight;
-				ScaleWidth = w;
-				ScaleHeight = h;
-				OnSizeModefy?.Invoke(w,h);
-				var info = new InfoShower()
-					{
-						
-						Title = "背景图已修改",
-						Info=string.Format("已修改尺寸为{0}*{1}点击此处以恢复输出图像尺寸",w,h),
-						TitleColor = Color.FromArgb(255, 50, 200, 50),
-						ExistTime = 5000,
-						CallBack = () => {
-							ScaleWidth = lastW;
-							ScaleHeight = lastH;
-							var info2 = new InfoShower()
-							{
-								Title = "更改已生效",
-								TitleColor = Color.FromArgb(255, 50, 200, 50),
-								ExistTime = 5000
-							};
-							InfoShower.ShowOnce(info2);
-							OnSizeModefy?.Invoke(ScaleWidth, ScaleHeight);
-						}
-					};
-					InfoShower.ShowOnce(info);
-			};
-			SettingModel.OnBackImgModefy = (img) => {
-				backImage = img;
-			};
+
 		}
 		public void OutPut(Microsoft.Office.Interop.Excel.Worksheet sh,Action callBack)
 		{
-			cancel = false;
+			ActionIsCancel = false;
 			if (sh == null) { NoticeOnCancel(0, -1,"表格未加载"); return; }
 			var dic = new Dictionary<string, int>();
-			var cstr = new StringBuilder();
 			try
 			{
-				for (int i = 1; i <= sh.UsedRange.Columns.Count; i++)
+				for (var i = 1; i <= sh.UsedRange.Columns.Count; i++)
 				{
 					var cell = (Microsoft.Office.Interop.Excel.Range)sh.Cells[1, i];
 					if (cell.Value != null && !dic.ContainsKey(cell.Value))
@@ -119,7 +149,7 @@ namespace DotNet4.Utilities.UtilDrawing
 				for (int i = 2; i <= rowCount; i++)
 				{
 					
-					if (Cancel)
+					if (ActionIsCancel)
 					{
 						NoticeOnCancel(i-2, rowCount - i+1,"用户主动取消");
 						return;
@@ -130,7 +160,7 @@ namespace DotNet4.Utilities.UtilDrawing
 						tmpG.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 						if(backImage!=null)tmpG.DrawImage(backImage, 0, 0, ScaleWidth, ScaleHeight);
 						var fileName =string.Format("{0}{1}{2}",fileDic ,fileFormat, sh.Cells[i, 1].Value);
-						foreach (var ctl in list)
+						foreach (var ctl in List)
 						{
 							if (ctl.BindingFiled == null) continue;
 							bool contains = false;
@@ -138,7 +168,7 @@ namespace DotNet4.Utilities.UtilDrawing
 							var thisValue = contains ? ((Microsoft.Office.Interop.Excel.Range)sh.Cells[i, dic[ctl.BindingFiled]]).Value : "";
 							ctl.Text = Convert.ToString(thisValue);
 							ctl.DrawToCanvas(tmpG,true);
-							if (Cancel)
+							if (ActionIsCancel)
 							{
 								NoticeOnCancel(i - 2, rowCount - i + 1,"用户主动取消");
 								return;
@@ -155,7 +185,7 @@ namespace DotNet4.Utilities.UtilDrawing
 						}
 						tmpG.Dispose();
 					}
-					if (Cancel)
+					if (ActionIsCancel)
 					{
 						NoticeOnCancel(i - 2, rowCount - i + 1,"用户主动取消");
 						return;

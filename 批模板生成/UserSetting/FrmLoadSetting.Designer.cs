@@ -1,6 +1,6 @@
-﻿namespace Inst
+﻿namespace 批模板生成
 {
-	partial class InfoShower
+	partial class FrmLoadSetting
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -15,8 +15,6 @@
 		{
 			if (disposing && (components != null))
 			{
-				infoBrush.Dispose();
-				titleBrush.Dispose();
 				components.Dispose();
 			}
 			base.Dispose(disposing);
@@ -30,25 +28,19 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InfoShower));
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmLoadSetting));
 			this.SuspendLayout();
 			// 
-			// InfoShower
+			// FrmLoadSetting
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.AutoScroll = true;
-			this.AutoValidate = System.Windows.Forms.AutoValidate.Disable;
-			this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-			this.ClientSize = new System.Drawing.Size(367, 125);
-			this.DoubleBuffered = true;
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+			this.ClientSize = new System.Drawing.Size(734, 534);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "InfoShower";
-			this.ShowIcon = false;
-			this.ShowInTaskbar = false;
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "InfoShower";
+			this.Name = "FrmLoadSetting";
+			this.Text = "FrmPreView";
+			this.Load += new System.EventHandler(this.FrmLoadSetting_Load);
+			this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.FrmLoadSetting_MouseClick);
 			this.ResumeLayout(false);
 
 		}

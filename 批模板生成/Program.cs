@@ -9,6 +9,7 @@ namespace 批模板生成
 	static class Program
 	{
 		public static Reg RegMain = new Reg().In("Main");
+		public static bool AnimationOn = true;
 		/// <summary>
 		/// 应用程序的主入口点。
 		/// </summary>

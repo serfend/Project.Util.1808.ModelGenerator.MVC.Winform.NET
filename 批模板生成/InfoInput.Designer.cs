@@ -28,21 +28,18 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(InfoInput));
 			this.IpBindingCol = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.CmdOk = new System.Windows.Forms.Button();
 			this.IpPosX = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.IpPosY = new System.Windows.Forms.TextBox();
-			this.fontSet = new System.Windows.Forms.FontDialog();
-			this.CmdFontSet = new System.Windows.Forms.Button();
 			this.IpPosH = new System.Windows.Forms.TextBox();
 			this.IpPosW = new System.Windows.Forms.TextBox();
 			this.label3 = new System.Windows.Forms.Label();
 			this.IpTagName = new System.Windows.Forms.TextBox();
 			this.CmdAutoNewLine = new System.Windows.Forms.CheckBox();
-			this.CmdForeColor = new System.Windows.Forms.Button();
-			this.colorSet = new System.Windows.Forms.ColorDialog();
 			this.GrpAlign = new System.Windows.Forms.GroupBox();
 			this.CmdAlignBottomRight = new System.Windows.Forms.Button();
 			this.CmdAlignBottomCenter = new System.Windows.Forms.Button();
@@ -53,6 +50,8 @@
 			this.CmdAlignTopRight = new System.Windows.Forms.Button();
 			this.CmdAlignTopCenter = new System.Windows.Forms.Button();
 			this.CmdAlignTopLeft = new System.Windows.Forms.Button();
+			this.CmdColor = new System.Windows.Forms.Label();
+			this.ColorSet = new System.Windows.Forms.ColorDialog();
 			this.GrpAlign.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -74,7 +73,7 @@
 			// 
 			// CmdOk
 			// 
-			this.CmdOk.Location = new System.Drawing.Point(172, 122);
+			this.CmdOk.Location = new System.Drawing.Point(772, 122);
 			this.CmdOk.Name = "CmdOk";
 			this.CmdOk.Size = new System.Drawing.Size(64, 24);
 			this.CmdOk.TabIndex = 9;
@@ -104,16 +103,6 @@
 			this.IpPosY.Name = "IpPosY";
 			this.IpPosY.Size = new System.Drawing.Size(39, 21);
 			this.IpPosY.TabIndex = 1;
-			// 
-			// CmdFontSet
-			// 
-			this.CmdFontSet.Location = new System.Drawing.Point(12, 122);
-			this.CmdFontSet.Name = "CmdFontSet";
-			this.CmdFontSet.Size = new System.Drawing.Size(64, 24);
-			this.CmdFontSet.TabIndex = 7;
-			this.CmdFontSet.Text = "字体...";
-			this.CmdFontSet.UseVisualStyleBackColor = true;
-			this.CmdFontSet.Click += new System.EventHandler(this.CmdFontSet_Click);
 			// 
 			// IpPosH
 			// 
@@ -156,16 +145,6 @@
 			this.CmdAutoNewLine.TabIndex = 6;
 			this.CmdAutoNewLine.Text = "自动换行";
 			this.CmdAutoNewLine.UseVisualStyleBackColor = true;
-			// 
-			// CmdForeColor
-			// 
-			this.CmdForeColor.Location = new System.Drawing.Point(82, 122);
-			this.CmdForeColor.Name = "CmdForeColor";
-			this.CmdForeColor.Size = new System.Drawing.Size(64, 24);
-			this.CmdForeColor.TabIndex = 8;
-			this.CmdForeColor.Text = "颜色...";
-			this.CmdForeColor.UseVisualStyleBackColor = true;
-			this.CmdForeColor.Click += new System.EventHandler(this.CmdForeColor_Click);
 			// 
 			// GrpAlign
 			// 
@@ -257,29 +236,39 @@
 			this.CmdAlignTopLeft.TabIndex = 9;
 			this.CmdAlignTopLeft.UseVisualStyleBackColor = true;
 			// 
+			// CmdColor
+			// 
+			this.CmdColor.BackColor = System.Drawing.Color.White;
+			this.CmdColor.Location = new System.Drawing.Point(13, 119);
+			this.CmdColor.Name = "CmdColor";
+			this.CmdColor.Size = new System.Drawing.Size(31, 26);
+			this.CmdColor.TabIndex = 12;
+			this.CmdColor.Click += new System.EventHandler(this.CmdColor_Click);
+			// 
 			// InfoInput
 			// 
 			this.AcceptButton = this.CmdOk;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(387, 156);
+			this.ClientSize = new System.Drawing.Size(390, 316);
+			this.Controls.Add(this.CmdColor);
 			this.Controls.Add(this.GrpAlign);
-			this.Controls.Add(this.CmdForeColor);
 			this.Controls.Add(this.CmdAutoNewLine);
 			this.Controls.Add(this.IpTagName);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.IpPosH);
 			this.Controls.Add(this.IpPosW);
-			this.Controls.Add(this.CmdFontSet);
 			this.Controls.Add(this.IpPosY);
 			this.Controls.Add(this.label2);
 			this.Controls.Add(this.IpPosX);
 			this.Controls.Add(this.CmdOk);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.IpBindingCol);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "InfoInput";
+			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.Text = "InfoInput";
-			this.Load += new System.EventHandler(this.InfoInput_Load);
 			this.GrpAlign.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -294,15 +283,11 @@
 		private System.Windows.Forms.TextBox IpPosX;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.TextBox IpPosY;
-		private System.Windows.Forms.FontDialog fontSet;
-		private System.Windows.Forms.Button CmdFontSet;
 		private System.Windows.Forms.TextBox IpPosH;
 		private System.Windows.Forms.TextBox IpPosW;
 		private System.Windows.Forms.Label label3;
 		private System.Windows.Forms.TextBox IpTagName;
 		private System.Windows.Forms.CheckBox CmdAutoNewLine;
-		private System.Windows.Forms.Button CmdForeColor;
-		private System.Windows.Forms.ColorDialog colorSet;
 		private System.Windows.Forms.GroupBox GrpAlign;
 		private System.Windows.Forms.Button CmdAlignBottomRight;
 		private System.Windows.Forms.Button CmdAlignBottomCenter;
@@ -313,5 +298,7 @@
 		private System.Windows.Forms.Button CmdAlignTopRight;
 		private System.Windows.Forms.Button CmdAlignTopCenter;
 		private System.Windows.Forms.Button CmdAlignTopLeft;
+		private System.Windows.Forms.Label CmdColor;
+		private System.Windows.Forms.ColorDialog ColorSet;
 	}
 }
